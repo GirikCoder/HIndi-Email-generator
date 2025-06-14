@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hindi Speech-to-Email Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Hindi Speech-to-Email Generator</h1>
+
+        <section class="input-section">
+            <h2>Your Hindi Instructions</h2>
+            <textarea id="hindiInput" placeholder="Speak your instructions in Hindi, or type here..." rows="6"></textarea>
+            <div class="button-group">
+                <button id="startSpeechBtn">Start Speaking</button>
+                <button id="stopSpeechBtn" disabled>Stop Speaking</button>
+                <button id="generateEmailBtn">Generate Email</button>
+            </div>
+            <p id="speechStatus" class="status-message"></p>
+        </section>
+
+        <section class="output-section">
+            <h2>Generated English Email</h2>
+            <textarea id="englishOutput" readonly rows="12" placeholder="Your formal English email will appear here..."></textarea>
+            <div class="button-group">
+                <button id="copyEmailBtn">Copy Email</button>
+                <button id="exportEmailBtn">Export Email</button>
+            </div>
+        </section>
+
+        <section class="mapping-section">
+            <h2>Hindi ↔ English Mapping</h2>
+            <div id="mappingOutput" class="mapping-container">
+                <p>Line-by-line translation will be shown here.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

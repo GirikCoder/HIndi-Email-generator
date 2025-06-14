@@ -1,14 +1,21 @@
 // Load environment variables from .env file
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const express = require('express');
-const cors = require('cors');
-const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require('@google/generative-ai'); // Import Gemini SDK
+import express from 'express';
+import cors from 'cors';
+// Import the Google Generative AI SDK
+
+// const { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } = require('@google/generative-ai'); // Import Gemini SDK
+import { GoogleGenAI } from "@google/genai";
+const ai = new GoogleGenAI({ apiKey: "AIzaSyDsqngE0DbHGXd5Cm9ypCVypvn9-SGc4RU" });
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Access your API key as an environment variable
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+console.log('GEMINI_API_KEY:', GEMINI_API_KEY);
 
 // Check if API key is loaded
 if (!GEMINI_API_KEY) {
@@ -17,8 +24,8 @@ if (!GEMINI_API_KEY) {
 }
 
 // Initialize Google Generative AI
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" }); // Using gemini-pro model
+// const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+// const model = ai.getGenerativeModel({ model: "gemini-1.0-pro" }); // Using gemini-pro model
 // TEMPORARY: Function to list available models for debugging
 async function debugListModels() {
     try {
@@ -41,7 +48,7 @@ async function debugListModels() {
 }
 
 // Call the debug function once when the server starts
-debugListModels();
+// debugListModels();
 
 // The rest of your server.js code continues below...
 // --- Middleware ---
@@ -65,78 +72,27 @@ app.post('/generate-email', async (req, res) => {
 
     try {
         // --- Prompt Engineering for Gemini ---
-        const prompt = `You are an AI assistant designed to convert informal Hindi instructions into a formal English email.
-        You also need to provide a line-by-line Hindi to English mapping of the *original Hindi instruction*.
-        
-        The output must strictly follow the specified format:
-
-        ENGLISH_EMAIL_START
-        [Formal English Email generated from Hindi instruction]
-        ENGLISH_EMAIL_END
-
-        MAPPING_START
-        [Original Hindi Line 1] -> [English Translation 1]
-        [Original Hindi Line 2] -> [English Translation 2]
-        ...
-        MAPPING_END
-
-        Example:
-        Hindi Instruction:
-        मुझे आज छुट्टी चाहिए। कृपया मेरे मैनेजर को ईमेल लिखें कि मैं बीमार हूँ।
-
-        Output:
-        ENGLISH_EMAIL_START
-        Subject: Leave Request - [Your Name/Employee ID]
-
-        Dear [Manager's Name],
-
-        I am writing to formally request a leave of absence for today, [Current Date], due to illness. I apologize for any inconvenience this may cause.
-
-        I will keep you updated on my condition and estimated return to work.
-
-        Thank you for your understanding.
-
-        Sincerely,
-        [Your Name]
-        ENGLISH_EMAIL_END
-
-        MAPPING_START
-        मुझे आज छुट्टी चाहिए। -> I need a leave today.
-        कृपया मेरे मैनेजर को ईमेल लिखें कि मैं बीमार हूँ। -> Please write an email to my manager stating that I am sick.
-        MAPPING_END
-
-        Now, process the following Hindi instruction:
+        const prompt = `You are an expert email writer. Your task is to generate a professional email in English based on the provided Hindi instructions.
+        The email should be clear, concise, and suitable for a professional context.
         Hindi Instruction:
         ${hindiText}
         `;
 
-        const result = await model.generateContent({
-            contents: [{ parts: [{ text: prompt }] }],
-            // Optional: Configure safety settings if needed
-            // If the model generates content that might be harmful, these settings block it.
-            safetySettings: [
-                {
-                    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                },
-                {
-                    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                },
-                {
-                    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                },
-                {
-                    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-                },
-            ],
+        const result = await ai.models.generateContent({
+            model: "gemini-2.0-flash", // Use the gemini-2.0-flash model
+            contents: prompt,
+            // generationConfig: {
+            //     maxOutputTokens: 500, // Limit output tokens to avoid excessive responses
+            //     temperature: 0.7, // Adjust temperature for creativity vs. accuracy
+            //     topP: 0.9, // Use top-p sampling for better quality
+                
+            // }
         });
 
         // Handle potential blockage due to safety settings
-        const response = result.response;
-        const text = response.text();
+        const response = result;
+        console.log('Gemini Response:', response); // Log the response for debugging
+        const text = result.text;
         console.log('Gemini Raw Response:\n', text); // Log the raw response for debugging
 
         // --- Parse the LLM's response ---
